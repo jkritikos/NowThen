@@ -1,19 +1,22 @@
-//UI dimension handling
+	//UI dimension handling
 var opacityIndex=0;
 var cameraViewDisplayed=false;
+var maxWidth=Ti.Platform.displayCaps.platformWidth;
+var maxHeight=Ti.Platform.displayCaps.platformHeight;
+var lDim;
+var sDim;
+var ratio;
+//The image to be selected from the photo gallery
+var isImagePortrait = false;
 
-var IPHONE5 = false;
-if (Ti.Platform.displayCaps.platformHeight == 568) {
-	IPHONE5 = true;
-}
-Ti.API.info('IPHONE5=' + IPHONE5);
+//var ImageFactory = require('ti.imagefactory');
+//var IPHONE5 = false;
+//if (Ti.Platform.displayCaps.platformHeight == 568) IPHONE5 = true;
+//Ti.API.info('IPHONE5=' + IPHONE5);
 //End UI dimension handling
 
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#000');
-
-//The image to be selected from the photo gallery
-var isPhotoGalleryImagePortrait = false;
 
 //Fade in animation
 var anim_in = Titanium.UI.createAnimation();
@@ -108,13 +111,9 @@ if (Titanium.Platform.osname == 'ipad') {
 
 //Placeholder of the image that the user selects from the camera roll
 var imageViewOverlay = Titanium.UI.createImageView({
-	opacity : 0.0,
-	top : -52,
-	left : 0,
-	canScale : true
+  	width: maxWidth,
+  	height: maxHeight 	
 });
-
-
 
 var b1 = Titanium.UI.createButton({
 	backgroundImage: "images/main/select_image_button.png",
@@ -126,7 +125,6 @@ var b1 = Titanium.UI.createButton({
 	focusable: true
 });
 
-
 Ti.include("ui/win/settingsWin.js");
 Ti.include("ui/win/cameraWin.js");
 Ti.include("ui/win/infoWin.js");
@@ -137,37 +135,43 @@ b1.addEventListener('click', function() {
 
 		success : function(event) {
 			//var cropRect = event.cropRect;
-			//photoGalleryImage = event.media;
-			
+			//photoGalleryImage = event.media;	
 			slideshowThenImage.image = event.media;
-
-			Ti.API.debug('Image height:'+event.media.height);
-			Ti.API.debug('Image width:'+event.media.width);
-			
-			if (event.media.height > event.media.width) {
-				isPhotoGalleryImagePortrait = true;
-				//imageView.width = 120;
-				//imageView.height = 160;		
-			} else {			
-			 	isPhotoGalleryImagePortrait = false;
-			 	//imageView.width= 160;
-			 	//imageView.height= 120;
-			}
 			imageView.image = event.media;
-			
-			// set image view
-			Ti.API.debug('Our type was: ' + event.mediaType+", is ImagePortrait:"+isPhotoGalleryImagePortrait);
-			
-			if (event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				//imageView.image = image;
+						
+			if (event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {				
+				Ti.API.debug("Image width:"+event.media.width);
+				Ti.API.debug("Image height:"+event.media.height);
+				
+				if (event.media.width>event.media.height) isImagePortrait=false;
+				else isImagePortrait=true;
+				ratio=(event.media.width/event.media.height).toFixed(2);
+				
+				// set image view
+				Ti.API.debug('Our type was: ' + event.mediaType+", is ImagePortrait:"+isImagePortrait+", ratio:"+ratio);								
+				
+				if (!isImagePortrait){ //landscape
+					Ti.API.debug("Change imageViewOverlay dimensions");
+					lDim=maxWidth;					
+					imageViewOverlay.width=lDim;
+					sDim=lDim * ( (1/ratio).toFixed(2)  );				
+					imageViewOverlay.height=sDim;
+				}	else { //portrait
+					lDim=maxHeight;
+					imageViewOverlay.height=lDim;
+					sDim=(lDim*ratio).toFixed(2);					
+					imageViewOverlay.width=sDim;								
+				}
+				
+				//Ti.API.debug('Ratio:'+imageViewOverlay.width/imageViewOverlay.height);
+				Ti.API.debug("sDim:"+sDim+" , lDim:"+lDim);				
+				Ti.API.debug('ImageViewOverlayWidth:'+imageViewOverlay.width+" , ImageViewOverlayHeight:" +imageViewOverlay.height);
 				imageViewOverlay.image = event.media;
-			} else {
+						
+			} else {				
 				// is this necessary?
 			}
-
-			//Titanium.API.info('PHOTO GALLERY SUCCESS cropRect.x ' + cropRect.x + ' cropRect.y ' + cropRect.y  + ' cropRect.height ' + cropRect.height + ' cropRect.width ' + cropRect.width);
-
-			Ti.API.debug('Okey donkey');
+						
 		},
 		cancel : function() {
 
@@ -275,50 +279,113 @@ win1.add(b3);
 win1.add(b4);
 
 
+
 var currentOrientation = Ti.Gesture.getOrientation();
 //Orientation handling
 Ti.Gesture.addEventListener('orientationchange', function(e) {
 	
-	//if (cameraViewDisplayed){
-			
-		//var currentOrientation = Ti.UI.orientation;
-
+	if (cameraViewDisplayed){
 		var newOrientation=e.orientation;
 		Ti.API.info('Current ORIENTATION = '+currentOrientation+' changed to = ' + newOrientation);
 		
-		var degreesToRotate = 0;
-		
-		//alert('orientation '+currentOrientation);
-		
+		var degreesToRotate = 0;		
 		var matrix2d = Ti.UI.create2DMatrix();
 		var matrix2dImage = Ti.UI.create2DMatrix();
 		
 		switch (newOrientation) {
 			case Ti.UI.PORTRAIT:
 				degreesToRotate = 0;
-				imageViewOverlay.top = -52;
-				break;
+				
+				if (!isImagePortrait){ //landscape
+					lDim=maxWidth;
+					sDim= lDim * ( (1/ratio).toFixed(2)  );
+					imageViewOverlay.height=sDim;
+					imageViewOverlay.width=lDim;
+					
+				} else { //portrait
+					lDim=maxHeight;
+					sDim=(maxHeight * ratio).toFixed(2);										
+					if (sDim>maxWidth){
+						sDim=maxWidth;
+						lDim=maxWidth * ( (1/ratio).toFixed(2));
+					}
+					imageViewOverlay.height=lDim;
+					imageViewOverlay.width=sDim;
+				}
+										
+	 			break;
 			case Ti.UI.UPSIDE_PORTRAIT:
-				degreesToRotate = 180;
-				imageViewOverlay.top = -52;
+				degreesToRotate = 180;				
+				
+				if (!isImagePortrait){ //landscape
+					lDim=maxWidth;
+					sDim= lDim * ( (1/ratio).toFixed(2)  );
+					imageViewOverlay.height=sDim;
+					imageViewOverlay.width=lDim;
+					
+				} else { //portrait
+					lDim=maxHeight;
+					sDim=(maxHeight * ratio).toFixed(2);										
+					if (sDim>maxWidth){
+						sDim=maxWidth;
+						lDim=maxWidth * ((1/ratio).toFixed(2));
+					}
+					imageViewOverlay.height=lDim;
+					imageViewOverlay.width=sDim;
+				}
+						
 				break;
 			case Ti.UI.LANDSCAPE_LEFT:
 				degreesToRotate = -90;
-				matrix2dImage = matrix2dImage.scale(1.5);
-				//matrix2dImage = matrix2dImage.scale(-1.5);
-				imageViewOverlay.top = 0;
+				
+				if (!isImagePortrait){					
+					lDim=maxHeight;										
+					sDim=lDim * ( (1/ratio).toFixed(2)  );
+					if (sDim>maxWidth) {
+						sDim=maxWidth;
+						lDim=(sDim*ratio).toFixed(2);
+					}				
+					imageViewOverlay.height=sDim;
+					imageViewOverlay.width=lDim;
+				}	else {
+					lDim=maxWidth;					
+					sDim=(lDim*ratio).toFixed(2);		
+					Ti.API.info('lDim:'+lDim);
+					Ti.API.info('sDim:'+sDim);
+					Ti.API.info(ratio);				
+					imageViewOverlay.height=lDim;
+					imageViewOverlay.width=sDim;	
+					Ti.API.info('Alert left:'+sDim+' - ImageViewOverlayWidth:'+imageViewOverlay.width);			
+				}			
 				break;
-			case Ti.UI.LANDSCAPE_RIGHT:				
-				matrix2dImage = matrix2dImage.scale(1.5);
-				degreesToRotate = 90;
-				imageViewOverlay.top = 0;
+			case Ti.UI.LANDSCAPE_RIGHT: //landsca[e]				
+				//matrix2dImage = matrix2dImage.scale(1.5);
+				degreesToRotate = 90;			
+				if (!isImagePortrait){					
+					lDim=maxHeight;										
+					sDim=lDim * ( (1/ratio).toFixed(2)  );
+					if (sDim>maxWidth) {
+						sDim=maxWidth;
+						lDim=(sDim*ratio).toFixed(2);
+					}				
+					imageViewOverlay.height=sDim;
+					imageViewOverlay.width=lDim;
+				}	else { //portrait
+					lDim=maxWidth;					
+					sDim=(lDim*ratio).toFixed(2);		
+					Ti.API.info('lDim:'+lDim);
+					Ti.API.info('sDim:'+sDim);
+					Ti.API.info(ratio);					
+					imageViewOverlay.height=lDim;
+					imageViewOverlay.width=sDim;		
+					Ti.API.info('Alert right:'+sDim+' - ImageViewOverlayWidth:'+imageViewOverlay.width);	
+				}					
 				break;   			
 		}
+					
+		Ti.API.debug("sDim:"+sDim+" , lDim:"+lDim);				
+		Ti.API.debug('ImageViewOverlayWidth:'+imageViewOverlay.width+" , ImageViewOverlayHeight:" +imageViewOverlay.height);				
 		
-		currentOrientation=newOrientation;
-	
-		
-		Ti.API.info('Rotating ' + degreesToRotate);
 		matrix2d = matrix2d.rotate(degreesToRotate);
 		// in degrees
 		matrix2dImage = matrix2dImage.rotate(degreesToRotate);
@@ -333,15 +400,33 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 			transform : matrix2dImage,
 			duration : 400
 		});
-
-		imageViewOverlay.animate(rotateFastImage);
+		
+		/*
+		var pWidth = Ti.Platform.displayCaps.platformWidth;
+		var pHeight = Ti.Platform.displayCaps.platformHeight;
+		Ti.App.SCREEN_WIDTH = (pWidth > pHeight) ? pHeight : pWidth;
+		Ti.App.SCREEN_HEIGHT = (pWidth > pHeight) ? pWidth : pHeight;
+		
+		Ti.API.info("Screen width:"+pWidth);
+		Ti.API.info("Screen height:"+pHeight);
+		
+		Ti.API.info('ImageViewOverlay width:'+imageViewOverlay.width);
+		Ti.API.info('ImageViewOverlay height:'+imageViewOverlay.height);
+		Ti.API.info('ImageViewOverlay image width:'+imageViewOverlay.image.width);
+		Ti.API.info('ImageViewOverlay image height:'+imageViewOverlay.image.height);
+		Ti.API.info('ImageViewOverlay size width:'+imageViewOverlay.size.width);
+		Ti.API.info('ImageViewOverlay size height:'+imageViewOverlay.size.height);
+		Ti.API.info('ImageViewOverlay to image width:'+imageViewOverlay.toImage().width);
+		Ti.API.info('ImageViewOverlay to image height:'+imageViewOverlay.toImage().height);
+		*/
+		//imageViewOverlay.animate({view:imageViewOverlayTmp,transition:Ti.UI.iPhone.AnimationStyle.FLIP_FROM_LEFT});
+		imageViewOverlay.animate(rotateFastImage);		
 		//imageViewOverlay.animate(rotateFast);
 		//cameraFlashButon.animate(rotateFast);
 		//shutterButton.animate(rotateFast);
 		cameraHideButon.animate(rotateFast);
-		//cameraSwitchButon.animate(rotateFast);
-		
-//	}
+		//cameraSwitchButon.animate(rotateFast);		
+	}
 });
 
 win1.open();

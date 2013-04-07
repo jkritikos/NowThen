@@ -1,6 +1,0 @@
-Are there any preset effects that you can add when a button is pressed? (besides sound)
-or do you require individual graphics for each frame, for example: the slideshow button changes from on off? So I included those two graphics, but once the button is pressed should it be shaded/embosed for a split second before it goes into the on/off state?therefore requiring a 3rd/4th graphic for this button?
-
-*same question as above for the opacity button, which currently has 4 graphics
-
-example of shaded/embossed graphics: see "slideshow button on/off - shaded transition"

@@ -1,10 +1,3 @@
-//The actual overlay on the camera
-var cameraOverlayView = Titanium.UI.createImageView({
-	top : 0,
-	left : 0
-});
-
-
 //Opacity slider
 var opacitySlider = Ti.UI.createSlider({
 	min : 0,
@@ -31,8 +24,9 @@ opacitySlider.addEventListener('change', function(e) {
 	else if (value == 3) imgOpacity = 0.3;
 	else if (value == 2) imgOpacity = 0.2;
 	else if (value == 1) imgOpacity = 0.1;
-	else if (value == 0) imgOpacity = 0.0;
+	else if (value == 0) imgOpacity = 0.0;	
 	imageViewOverlay.opacity = imgOpacity;
+	
 });
 
 //Shutter button
@@ -141,6 +135,13 @@ cameraOverlayBottomToolbarView.add(shutterButton);
 cameraOverlayBottomToolbarView.add(cameraHideButon);
 cameraOverlayTopToolbarView.add(cameraSwitchButon);
 cameraOverlayTopToolbarView.add(cameraFlashButon);
+
+//The actual overlay on the camera
+var cameraOverlayView = Titanium.UI.createView({
+	top : 0,
+	left : 0,
+	zIndex: 0
+});
 
 //cameraOverlayView.add(flashModeLabelView);
 cameraOverlayView.add(opacitySlider);

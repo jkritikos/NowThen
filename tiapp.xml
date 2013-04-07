@@ -45,5 +45,7 @@
         </splash>
         <theme>default</theme>
     </mobileweb>
-    <modules/>
+    <modules>
+        <module platform="iphone" version="1.1.1">ti.imagefactory</module>
+    </modules>
 </ti:app>
