@@ -3,7 +3,7 @@ var settingsWindow = Titanium.UI.createWindow({
 		backgroundImage : 'images/bg/settings_background.png',
 		modal : true,
 		navBarHidden:true		
-	});
+});
 	
 //Settings close button
 var settingsCloseButton = Titanium.UI.createButton({	
@@ -22,31 +22,67 @@ settingsCloseButton.addEventListener('click', function() {
 	
 settingsWindow.add(settingsCloseButton);
 		
+if (Titanium.App.Properties.getString('opacity')!=null){	
+	Ti.API.info('Getting opacity value:'+Titanium.App.Properties.getString('opacity'));	
+	opacity=parseInt(Titanium.App.Properties.getString('opacity'));
+	if (opacity==0) opacityIndex=0;
+	else if (opacity==25) opacityIndex=1;
+	else if (opacity==50) opacityIndex=2;
+	else opacityIndex=3;
+	Ti.API.info('Start-Opacity:'+opacity+",OpacityIndex:"+opacityIndex);	
+}
+
+		
 var opacityImages =["opacity_button_0.png","opacity_button_25.png","opacity_button_50.png","opacity_button_100.png"];
 	
 var opacityButton = Titanium.UI.createButton({
-		backgroundImage : "images/settings/"+opacityImages[opacityIndex],
-		width: 308,
-		height: 82,
-		top :100 
-	});
+	backgroundImage : "images/settings/"+opacityImages[opacityIndex],
+	width: 322,
+	height: 106,
+	top :100 
+});
 	
-opacityButton.addEventListener('click', function() {
-			if (opacityIndex==3) opacityIndex=0;
-			else opacityIndex++;
-			var imgPath="images/settings/"+opacityImages[opacityIndex];
-			//Ti.API.info("Image path:"+imgPath);
-			opacityButton.setBackgroundImage(imgPath);
-		});
+opacityButton.addEventListener('click', function() {	
+	if (opacityIndex==3)  opacityIndex=0;
+	 else 	 opacityIndex++
+	
+	var imgPath="images/settings/"+opacityImages[opacityIndex];
 		
-var slideshowSlider = Titanium.UI.createSwitch({
-			value : false,
-			top:250,
-			backgroundImage:'images/settings/slideshow_button_off.png'//,
-			//highlightedThumbImage:'images/settings/slideshow_button off_shaded transition.png'
-		});
+	if (opacityIndex==0) opacity=0;
+	else if (opacityIndex==1) opacity=15;
+	else if (opacityIndex==2) opacity=50;
+	else if (opacityIndex==3) opacity=100;
+	
+	Titanium.App.Properties.setString('opacity',  opacity);	
+	opacityButton.setBackgroundImage(imgPath);
+});
+
+var slideshowIndex = 1;
+var slideshowImages = ["slideshow_button_off.png","slideshow_button_on.png" ];
+		
+var slideShowButton = Titanium.UI.createButton({
+	backgroundImage: "images/settings/"+slideshowImages[slideshowIndex],
+	width: 322,
+	height: 106,
+	top: 200
+});
+
+slideShowButton.addEventListener('click',function() {
+	if (slideshowIndex==1) {
+		slideshowIndex=0;
+		slideshow=true;
+	} else {
+		slideshowIndex=0;
+		slideshow=false;
+	}
+	slideShowButton.setBackgroundImage("images/settings/"+slideshowImages[slideshowIndex]);
+	
+});
+		
+		
+		
 		
 settingsWindow.add(opacityButton);
-settingsWindow.add(slideshowSlider);
+settingsWindow.add(slideShowButton);
 
 
