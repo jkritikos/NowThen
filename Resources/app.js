@@ -73,32 +73,34 @@ var thenImageView = Ti.UI.createImageView({
 //Animations
 var anim_in = Titanium.UI.createAnimation({
 	opacity : 1,
-	duration: 500	
+	duration: 3000	
 });
 
 var anim_out = Titanium.UI.createAnimation({
 	opacity:0,
-	duration:500
+	duration: 3000
 });
 
 var fadeOutAnim = Ti.UI.createAnimation({
 	opacity:0,
-	duration:2000
+	duration: 3000
 });
 						
 var fadeInAnim = Ti.UI.createAnimation({
 	opacity:1,
-	duration:2000
+	duration: 3000
 });
 
 var fadeOutListener=function() {
 	Ti.API.debug('Fading in now image view');
-	thenImageView.animate(fadeOutAnim,function (){nowImageView.animate(fadeInAnim);});   						
+	thenImageView.animate(anim_out);
+	nowImageView.animate(fadeInAnim);   						
 }		
 
 var fadeInListener= function(){
 	Ti.API.debug('Fading out now ImageView');
-	nowImageView.animate(fadeOutAnim,function(){thenImageView.animate(fadeOutAnim);});
+	thenImageView.animate(anim_in);
+	nowImageView.animate(fadeOutAnim);
 }				
 			
 //Stop slideshow button
