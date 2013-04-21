@@ -43,11 +43,9 @@ var shutterButton = Ti.UI.createButton({
 
 //Shutter button event listener
 shutterButton.addEventListener('click', function() {
-	Ti.Media.takePicture();
-	viewSlideshow.animate(anim_in);
-	//start slideshow
-	//slideshowNowImage.animate(anim_out);
-	//slideshowThenImage.animate(anim_in);
+	Ti.API.debug('Animating slideshowViewContainer');	
+	slideshowViewContainer.animate(anim_in);			
+	Ti.Media.takePicture();		
 });
 
 //Camera hide button
@@ -66,6 +64,7 @@ var cameraHideButon = Ti.UI.createButton({
 cameraHideButon.addEventListener('click', function() {
 	cameraViewDisplayed=false;
 	Ti.Media.hideCamera();
+	
 });
 
 //Camera switch button

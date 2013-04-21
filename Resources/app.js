@@ -5,33 +5,17 @@ var maxWidth=Ti.Platform.displayCaps.platformWidth;
 var maxHeight=Ti.Platform.displayCaps.platformHeight;
 var sWidth=200;
 var sHeight=150;
-var initialImage;
-var ratio;
+var thenImage;
+var nowImage;
+
 //The image to be selected from the photo gallery
 var isImagePortrait = false;
 var opacityIndex=0;	
 var opacity=50;
 var slideshow=true;
 
-
-//var ImageFactory = require('ti.imagefactory');
-//var IPHONE5 = false;
-//if (Ti.Platform.displayCaps.platformHeight == 568) IPHONE5 = true;
-//Ti.API.info('IPHONE5=' + IPHONE5);
-//End UI dimension handling
-
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#000');
-
-//Fade in animation
-var anim_in = Titanium.UI.createAnimation();
-anim_in.opacity = 1;
-anim_in.duration = 1;
-
-//Fade out animation
-var anim_out = Titanium.UI.createAnimation();
-anim_out.opacity = 0;
-anim_out.duration = 1;
 
 // create base UI tab and root window
 var win1 = Titanium.UI.createWindow({
@@ -45,7 +29,10 @@ var imageView = Titanium.UI.createImageView({
 	height : sHeight,
 	width :  sWidth,
 	top : 10,
-	image : "images/main/square_graphic_old_image.png"//,
+	image : "images/main/square_graphic_old_image.png",
+	borderColor:'#000000',
+    borderWidth: 5,
+    borderRadius: 15,
 	//canScale : true,
 	//hires : true
 });
@@ -53,7 +40,7 @@ var imageView = Titanium.UI.createImageView({
 win1.add(imageView);
 
 //The slideshow view
-var viewSlideshow = Ti.UI.createView({
+var slideshowViewContainer = Ti.UI.createView({
 	backgroundImage : 'images/bg/background_metal_cells.png',
 	opacity : 0,
 	top : 0,
@@ -63,54 +50,91 @@ var viewSlideshow = Ti.UI.createView({
 	zIndex : 100
 });
 
+	// initialize container view 
+var slideshowView = Titanium.UI.createView({
+	height: maxHeight,
+	width: maxWidth,
+	top:0,
+	left:0	
+});
+
+var nowImageView = Ti.UI.createImageView({
+	opacity:1,
+	borderWidth:3,
+	borderColor:'#777'
+});
+
+var thenImageView = Ti.UI.createImageView({
+	opacity:1,	
+	borderWidth:3,
+	borderColor:'#777'
+});
+
+//Animations
+var anim_in = Titanium.UI.createAnimation({
+	opacity : 1,
+	duration: 500	
+});
+
+var anim_out = Titanium.UI.createAnimation({
+	opacity:0,
+	duration:500
+});
+
+var fadeOutAnim = Ti.UI.createAnimation({
+	opacity:0,
+	duration:2000
+});
+						
+var fadeInAnim = Ti.UI.createAnimation({
+	opacity:1,
+	duration:2000
+});
+
+var fadeOutListener=function() {
+	Ti.API.debug('Fading in now image view');
+	thenImageView.animate(fadeOutAnim,function (){nowImageView.animate(fadeInAnim);});   						
+}		
+
+var fadeInListener= function(){
+	Ti.API.debug('Fading out now ImageView');
+	nowImageView.animate(fadeOutAnim,function(){thenImageView.animate(fadeOutAnim);});
+}				
+			
 //Stop slideshow button
 var buttonStopSlideshow = Titanium.UI.createButton({
 	title : 'Stop',
 	height : 50,
 	width : 200,
 	bottom : 10,
-	zIndex : 101
+	zIndex : 105
 });
 
 //Stop slideshow button event listener
 buttonStopSlideshow.addEventListener('click', function() {
 	//close the slideshow view and clear the preview image (from camera roll) & slideshow image
-	viewSlideshow.opacity = parseInt(opacity);
-	imageView.image = "images/main/square_graphic_old_image.png";
-	//slideshowThenImage.image = "";
-	//slideshowNowImage.image = "";
-	viewSlideshow.close();
+	slideshowViewContainer.animate(anim_out);
+	//imageView.width=sWidth;
+	//imageView.height=sHeight;
+	//imageView.image = "images/main/square_graphic_old_image.png";
+	Ti.API.debug('Removing listeners');
+	fadeOutAnim.removeEventListener('complete',fadeOutListener);
+	fadeInAnim.removeEventListener('complete',fadeInListener);
 });
 
-//slideshow content NOW
-var slideshowNowImage = Titanium.UI.createImageView({
-	canScale : true,
-	opacity : 1,
-	top : 20,
-	left : 0
-});
-
-//slideshow content THEN
-var slideshowThenImage = Titanium.UI.createImageView({
-	canScale : true,
-	opacity : 1,
-	top : 220,
-	right : 0
-});
-
-viewSlideshow.add(slideshowNowImage);
-viewSlideshow.add(slideshowThenImage);
-viewSlideshow.add(buttonStopSlideshow);
+slideshowViewContainer.add(slideshowView);
+slideshowView.add(thenImageView);
+slideshowView.add(nowImageView);
+slideshowViewContainer.add(buttonStopSlideshow);
 //End slideshow view setup
 
-win1.add(viewSlideshow);
+win1.add(slideshowViewContainer);
 
 var popoverView;
 var arrowDirection;
 
 if (Titanium.Platform.osname == 'ipad') {
-	// photogallery displays in a popover on the ipad and we
-	// want to make it relative to our image with a left arrow
+	// photogallery displays in a popover on the ipad and we want to make it relative to our image with a left arrow
 	arrowDirection = Ti.UI.iPad.POPOVER_ARROW_DIRECTION_LEFT;
 	popoverView = imageView;
 }
@@ -121,7 +145,7 @@ var imageViewOverlay = Titanium.UI.createImageView({
   	height: maxHeight 	
 });
 
-var b1 = Titanium.UI.createButton({
+var galleryBtn = Titanium.UI.createButton({
 	backgroundImage: "images/main/select_image_button.png",
 	backgroundSelectedImage:"images/main/select_image_button_highlighted.png",
 	backgroundFocusedImage:"images/main/select_image_button_highlighted.png",
@@ -136,7 +160,7 @@ Ti.include("ui/win/cameraWin.js");
 Ti.include("ui/win/infoWin.js");
 
 //Photo gallery event listener
-b1.addEventListener('click', function() { 
+galleryBtn.addEventListener('click', function() { 
 	Titanium.Media.openPhotoGallery({
 
 		success : function(event) {
@@ -144,36 +168,26 @@ b1.addEventListener('click', function() {
 			//photoGalleryImage = event.media;			
 									
 			if (event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {	
-				initialImage=event.media			
-				//Ti.API.debug("Image width:"+initialImage.width);
-				//Ti.API.debug("Image height:"+initialImage.height);
-				
-				if (initialImage.width>initialImage.height) isImagePortrait=false;
+				thenImage=event.media			
+		
+				if (thenImage.width>thenImage.height) isImagePortrait=false;
 				else isImagePortrait=true;
-				ratio=(initialImage.width/initialImage.height).toFixed(2);
-				
-				// set image view
-				Ti.API.debug('Our type was: ' + event.mediaType+", is ImagePortrait:"+isImagePortrait+", ratio:"+ratio);								
-				//Ti.API.debug('sWidth:' + sWidth+", sHeight:"+sHeight);
-				var dimObj;
+				var ratio=(thenImage.width/thenImage.height).toFixed(2);
+				var d;
 				if (!isImagePortrait){ //landscape											
 					imageViewOverlay.width=maxWidth;							
 					imageViewOverlay.height=maxWidth * ( (1/ratio).toFixed(2)  );
-					dimObj=getDimensionPortrait(isImagePortrait,true,0,sWidth,sHeight);											
+					d=getDimensionPortrait(isImagePortrait,true,0,sWidth,sHeight,ratio);											
 				}	else { //portrait					
 					imageViewOverlay.height=maxHeight;								
 					imageViewOverlay.width=(maxHeight*ratio).toFixed(2);			
-					dimObj=getDimensionPortrait(isImagePortrait,true,0,sWidth,sHeight);									
+					d=getDimensionPortrait(isImagePortrait,true,0,sWidth,sHeight,ratio);									
 				}
-				imageView.image = initialImage;
-				imageView.width=dimObj.width;
-				imageView.height=dimObj.height;
-				slideshowThenImage.image = initialImage;
-				slideshowThenImage.width=imageViewOverlay.width;
-				slideshowThenImage.height=imageViewOverlay.height;				
-				imageViewOverlay.image = initialImage;
-				var dimObj
-						
+				
+				imageView.width=d.width;
+				imageView.height=d.height;
+				imageView.image = thenImage;			
+				imageViewOverlay.image = thenImage;
 			} 
 						
 		},
@@ -190,7 +204,7 @@ b1.addEventListener('click', function() {
 });
 
 //Show camera button
-var b2 = Titanium.UI.createButton({
+var cameraBtn = Titanium.UI.createButton({
 	backgroundImage: "images/main/capture_image_button.png",
 	backgroundSelectedImage:"images/main/capture_image_button_highlighted.png",
 	backgroundFocusedImage:"images/main/capture_image_button_highlighted.png",
@@ -201,26 +215,38 @@ var b2 = Titanium.UI.createButton({
 });
 
 //Show camera event listener
-b2.addEventListener('click', function() {
+cameraBtn.addEventListener('click', function() {
 	cameraViewDisplayed=true;	
 	Titanium.Media.showCamera({
 		success : function(event) {
-			//var cropRect = event.cropRect;
-			//var image = event.media;
-			//slideshowNowImage.height = 260;
-			var targetHeight = 220;
-			var targetWidth = 160;
-			//slideshowNowImage.height = targetHeight;
-			//slideshowNowImage.width = 320;
-			//slideshowNowImage.width = targetWidth;
-			slideshowThenImage.height = targetHeight;
-			slideshowThenImage.width = targetWidth;
-			slideshowNowImage.image = event.media;
-			slideshowNowImage.height = targetHeight;
-			slideshowNowImage.width = targetWidth;
+			nowImage = event.media;
+							
+			var isNowImagePortrait=false;
+			if (nowImage.width > nowImage.height) isNowImagePortrait=false;
+			else isNowImagePortrait=true;
+							
+			var thenRatio=(thenImage.width/thenImage.height).toFixed(2);							
+			var nowRatio=(nowImage.width/nowImage.height).toFixed(2);
+			
+			var thenD=getDimensionPortrait(isImagePortrait,false,0,maxWidth,maxHeight,thenRatio);
+			var nowD=getDimensionPortrait(isNowImagePortrait,false,0,maxWidth,maxHeight,nowRatio);					
+			
+			nowImageView.width=nowD.width;
+			nowImageView.height=nowD.height;			
+			nowImageView.image=nowImage;
+			
+			thenImageView.width=thenD.width;
+			thenImageView.height=thenD.height;
+			thenImageView.image=thenImage;
+			
+			nowImageView.animate(fadeOutAnim);			
+			
+			fadeOutAnim.addEventListener('complete',fadeOutListener);			
+			fadeInAnim.addEventListener('complete',fadeInListener)
+		
 		},
 		cancel : function() {
-
+			Ti.API.info('Cancelling');
 		},
 		error : function(error) {
 			// create alert
@@ -246,7 +272,7 @@ b2.addEventListener('click', function() {
 	});
 });
 
-var b3 =  Titanium.UI.createButton({	
+var settingsBtn =  Titanium.UI.createButton({	
 	backgroundImage: "images/main/settings_button.png",
 	backgroundSelectedImage: "images/main/settings_button_highlighted.png",
 	backgroundFocusedImage:"images/main/settings_button_highlighted.png",
@@ -257,11 +283,11 @@ var b3 =  Titanium.UI.createButton({
 });
 
 //Settings event listener
-b3.addEventListener('click', function() {		
+settingsBtn.addEventListener('click', function() {		
 	settingsWindow.open();
 }); 
 
-var b4 = Titanium.UI.createButton({
+var infoBtn = Titanium.UI.createButton({
 	backgroundImage : "images/main/info_button.png",
 	backgroundSelectedImage:"images/main/info_button_highlighted.png",
 	backgroundFocusedImage:"images/main/info_button_highlighted.png",	
@@ -273,19 +299,18 @@ var b4 = Titanium.UI.createButton({
 });
 
 //info listener
-b4.addEventListener('click', function() {		
+infoBtn.addEventListener('click', function() {		
 	infoWindow.open();
 });
 
-win1.add(b1);
-win1.add(b2);
-win1.add(b3);
-win1.add(b4);
+win1.add(galleryBtn);
+win1.add(cameraBtn);
+win1.add(settingsBtn);
+win1.add(infoBtn);
 
 var currentOrientation = Ti.Gesture.getOrientation();
-//Orientation handling
 
-function getDimensionPortrait(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight){
+function getDimensionPortrait(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight,ratio){
 	var lDim;
 	var sDim;	
 	
@@ -313,7 +338,7 @@ function getDimensionPortrait(isImagePortrait,doRotate,degreesToRotate,mWidth,mH
 	return dimObj;
 }
 
-function getDimensionLandscape(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight){
+function getDimensionLandscape(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight,ratio){
 	var lDim;
 	var sDim;
 	
@@ -342,7 +367,8 @@ function getDimensionLandscape(isImagePortrait,doRotate,degreesToRotate,mWidth,m
 
 Ti.Gesture.addEventListener('orientationchange', function(e) {
 	
-	if (cameraViewDisplayed){
+	if (cameraViewDisplayed && thenImage){
+				
 		var newOrientation=e.orientation;
 		//Ti.API.info('Current ORIENTATION = '+currentOrientation+' changed to = ' + newOrientation);
 		
@@ -351,31 +377,31 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 		var matrix2d = Ti.UI.create2DMatrix();
 		var matrix2dImage = Ti.UI.create2DMatrix();
 		var dimObj;
-		
+		var ratio=(thenImage.width/thenImage.height).toFixed(2);
 		switch (newOrientation) {
 			case Ti.UI.PORTRAIT:
 				Ti.API.info("Portrait");
 				doRotate=true;
 				degreesToRotate = 0;
-				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight);										
+				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);										
 	 			break;
 			case Ti.UI.UPSIDE_PORTRAIT:
 				Ti.API.info("Upside Portrait");
 				doRotate=true;
 				degreesToRotate = 180;	
-				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight);										
+				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);										
 				break;				
 			case Ti.UI.LANDSCAPE_LEFT:
 				Ti.API.info("Landscape left");
 				degreesToRotate = -90;
 				doRotate=true;
-				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight);
+				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);
 				break;
 			case Ti.UI.LANDSCAPE_RIGHT: //landsca[e]							
 				Ti.API.info("Landscape right");
 				degreesToRotate = 90;
 				doRotate=true;
-				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight);			
+				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);			
 				break;   			
 			case Ti.UI.FACE_UP:
 				Ti.API.info("Face up");
@@ -403,17 +429,16 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 				break;			
 		}
 		
-		if (dimObj.doRotate){
+		if (dimObj && dimObj.doRotate){
 			Ti.API.info("doRotate:"+dimObj.doRotate);
 			Ti.API.info("degreesToRotate:"+dimObj.degresToRotate);
 			
 			imageViewOverlay.height=dimObj.height;
 			imageViewOverlay.width=dimObj.width;
-			imageViewOverlay.image=initialImage;
+			imageViewOverlay.image=thenImage;
+		
 			
-			Ti.API.debug('ImageViewOverlayWidth:'+imageViewOverlay.width+" , ImageViewOverlayHeight:" +imageViewOverlay.height);
-				
-			
+			Ti.API.debug('ImageViewOverlayWidth:'+imageViewOverlay.width+" , ImageViewOverlayHeight:" +imageViewOverlay.height);			
 			matrix2d = matrix2d.rotate(degreesToRotate);
 			// in degrees
 			matrix2dImage = matrix2dImage.rotate(degreesToRotate);
