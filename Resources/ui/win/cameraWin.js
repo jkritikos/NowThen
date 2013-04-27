@@ -118,15 +118,15 @@ var cameraOverlayBottomToolbarView = Ti.UI.createView({
 	width : 320,
 	height : 108,
 	zIndex : 100,
-	backgroundImage: "images/camera/vertical/bottom_menu.png"
+	//backgroundImage: "images/camera/vertical/bottom_menu.png"
 });
 
 var cameraOverlayTopToolbarView = Ti.UI.createView({
 	top:0 ,
 	width: 320,
 	height: 85,
-	zIndex:100,
-	backgroundImage: "images/camera/vertical/top_border_background.png"
+	zIndex:100//,
+	//backgroundImage: "images/camera/vertical/top_border_background.png"
 });
 
 //Add the items to the camera toolbar

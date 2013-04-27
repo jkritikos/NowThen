@@ -1,8 +1,15 @@
-	//UI dimension handling
+//UI dimension handling
+//UI dimension handling
+var IPHONE5 = (Ti.Platform.displayCaps.platformHeight==568);	
+Ti.API.info('IPHONE5='+IPHONE5);
 
 var cameraViewDisplayed=false;
 var maxWidth=Ti.Platform.displayCaps.platformWidth;
 var maxHeight=Ti.Platform.displayCaps.platformHeight;
+
+var maxOverlayWidth=maxWidth;
+var maxOverlayHeight=maxHeight -  (IPHONE5?96:48);
+
 var sWidth=200;
 var sHeight=150;
 var thenImage;
@@ -73,32 +80,30 @@ var thenImageView = Ti.UI.createImageView({
 //Animations
 var anim_in = Titanium.UI.createAnimation({
 	opacity : 1,
-	duration: 3000	
+	duration: 1000	
 });
 
 var anim_out = Titanium.UI.createAnimation({
 	opacity:0,
-	duration: 3000
+	duration: 1000
 });
 
 var fadeOutAnim = Ti.UI.createAnimation({
 	opacity:0,
-	duration: 3000
+	duration: 1500
 });
 						
 var fadeInAnim = Ti.UI.createAnimation({
 	opacity:1,
-	duration: 3000
+	duration: 1500
 });
 
-var fadeOutListener=function() {
-	Ti.API.debug('Fading in now image view');
+var fadeOutListener=function() {	
 	thenImageView.animate(anim_out);
 	nowImageView.animate(fadeInAnim);   						
 }		
 
 var fadeInListener= function(){
-	Ti.API.debug('Fading out now ImageView');
 	thenImageView.animate(anim_in);
 	nowImageView.animate(fadeOutAnim);
 }				
@@ -143,9 +148,12 @@ if (Titanium.Platform.osname == 'ipad') {
 
 //Placeholder of the image that the user selects from the camera roll
 var imageViewOverlay = Titanium.UI.createImageView({
-  	width: maxWidth,
-  	height: maxHeight 	
+  	width: maxOverlayWidth,
+  	height: maxOverlayHeight,
+  	top:0,
+  	backgroundColor : '#FA5858'
 });
+
 
 var galleryBtn = Titanium.UI.createButton({
 	backgroundImage: "images/main/select_image_button.png",
@@ -166,36 +174,42 @@ galleryBtn.addEventListener('click', function() {
 	Titanium.Media.openPhotoGallery({
 
 		success : function(event) {
-			//var cropRect = event.cropRect;
-			//photoGalleryImage = event.media;			
 									
 			if (event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {	
-				thenImage=event.media			
+				thenImage=event.media;
 		
 				if (thenImage.width>thenImage.height) isImagePortrait=false;
 				else isImagePortrait=true;
 				var ratio=(thenImage.width/thenImage.height).toFixed(2);
-				var d;
-				if (!isImagePortrait){ //landscape											
-					imageViewOverlay.width=maxWidth;							
-					imageViewOverlay.height=maxWidth * ( (1/ratio).toFixed(2)  );
-					d=getDimensionPortrait(isImagePortrait,true,0,sWidth,sHeight,ratio);											
+				
+				Ti.API.info('Image ratio:'+ratio);
+				Ti.API.info('Image width:'+thenImage.width);
+				Ti.API.info('Image height:'+thenImage.height);
+				
+							
+				var d,dimObj;
+				if (!isImagePortrait){ //landscape
+					dimObj=getDimensionLandscape(isImagePortrait,true,0,maxOverlayWidth,maxOverlayHeight,ratio,false);																
+					d=getDimensionLandscape(isImagePortrait,true,0,sWidth,sHeight,ratio,false);											
 				}	else { //portrait					
-					imageViewOverlay.height=maxHeight;								
-					imageViewOverlay.width=(maxHeight*ratio).toFixed(2);			
-					d=getDimensionPortrait(isImagePortrait,true,0,sWidth,sHeight,ratio);									
+					imageViewOverlay.height=maxOverlayHeight;								
+					imageViewOverlay.width=(maxOverlayHeight*ratio).toFixed(2);			
+					d=getDimensionPortrait(isImagePortrait,true,0,sWidth,sHeight,ratio,false);
+					dimObj=getDimensionPortrait(isImagePortrait,true,0,maxOverlayWidth,maxOverlayHeight,ratio,false);									
 				}
 				
+				
+				imageViewOverlay.width=dimObj.width;
+				imageViewOverlay.height=dimObj.height;
+				imageViewOverlay.image = thenImage;
+							
 				imageView.width=d.width;
 				imageView.height=d.height;
 				imageView.image = thenImage;			
-				imageViewOverlay.image = thenImage;
 			} 
 						
 		},
-		cancel : function() {
-
-		},
+		cancel : function() {},
 		error : function(error) {
 		},
 		allowEditing : false,
@@ -230,8 +244,8 @@ cameraBtn.addEventListener('click', function() {
 			var thenRatio=(thenImage.width/thenImage.height).toFixed(2);							
 			var nowRatio=(nowImage.width/nowImage.height).toFixed(2);
 			
-			var thenD=getDimensionPortrait(isImagePortrait,false,0,maxWidth,maxHeight,thenRatio);
-			var nowD=getDimensionPortrait(isNowImagePortrait,false,0,maxWidth,maxHeight,nowRatio);					
+			var thenD=getDimensionPortrait(isImagePortrait,false,0,maxWidth,maxHeight,thenRatio,true);
+			var nowD=getDimensionPortrait(isNowImagePortrait,false,0,maxWidth,maxHeight,nowRatio,true);					
 			
 			nowImageView.width=nowD.width;
 			nowImageView.height=nowD.height;			
@@ -263,6 +277,7 @@ cameraBtn.addEventListener('click', function() {
 			}
 			// show alert
 			a.show();
+			Ti.API.debug("Camera overlay width:"+cameraOverlayView.width+" "+cameraOverlayView.height);
 		},
 		allowEditing : false,
 		saveToPhotoGallery : true,
@@ -312,7 +327,7 @@ win1.add(infoBtn);
 
 var currentOrientation = Ti.Gesture.getOrientation();
 
-function getDimensionPortrait(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight,ratio){
+function getDimensionPortrait(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight,ratio,fit){
 	var lDim;
 	var sDim;	
 	
@@ -326,8 +341,9 @@ function getDimensionPortrait(isImagePortrait,doRotate,degreesToRotate,mWidth,mH
 			dimObj.height=sDim;					
 		} else { //portrait
 			lDim=mHeight;
-			sDim=(mHeight * ratio).toFixed(2);										
-			if (sDim>mWidth){
+			sDim=(mHeight * ratio).toFixed(2);	
+												
+			if ((sDim>mWidth) && fit){
 				sDim=mWidth;
 				lDim=mWidth * ( (1/ratio).toFixed(2));
 			}
@@ -340,7 +356,7 @@ function getDimensionPortrait(isImagePortrait,doRotate,degreesToRotate,mWidth,mH
 	return dimObj;
 }
 
-function getDimensionLandscape(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight,ratio){
+function getDimensionLandscape(isImagePortrait,doRotate,degreesToRotate,mWidth,mHeight,ratio,fit){
 	var lDim;
 	var sDim;
 	
@@ -349,7 +365,7 @@ function getDimensionLandscape(isImagePortrait,doRotate,degreesToRotate,mWidth,m
 		if (!isImagePortrait){					
 			lDim=mHeight;										
 			sDim=lDim * ( (1/ratio).toFixed(2)  );
-			if (sDim>mWidth) {
+			if ((sDim>mWidth) && fit) {
 				sDim=mWidth;
 				lDim=(sDim*ratio).toFixed(2);
 			}				
@@ -367,12 +383,11 @@ function getDimensionLandscape(isImagePortrait,doRotate,degreesToRotate,mWidth,m
 	return dimObj;
 }
 
-Ti.Gesture.addEventListener('orientationchange', function(e) {
-	
+Ti.Gesture.addEventListener('orientationchange', function(e) {	
 	if (cameraViewDisplayed && thenImage){
 				
 		var newOrientation=e.orientation;
-		//Ti.API.info('Current ORIENTATION = '+currentOrientation+' changed to = ' + newOrientation);
+		Ti.API.info('Current ORIENTATION = '+currentOrientation+' changed to = ' + newOrientation);
 		
 		var doRotate=false;
 		var degreesToRotate = 0;		
@@ -380,30 +395,32 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 		var matrix2dImage = Ti.UI.create2DMatrix();
 		var dimObj;
 		var ratio=(thenImage.width/thenImage.height).toFixed(2);
+		
+		Ti.API.debug('ImageViewOverlayWidth:'+imageViewOverlay.width+" , ImageViewOverlayHeight:" +imageViewOverlay.height);
 		switch (newOrientation) {
 			case Ti.UI.PORTRAIT:
-				Ti.API.info("Portrait");
+				Ti.API.info("Portrait");			
 				doRotate=true;
 				degreesToRotate = 0;
-				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);										
+				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxOverlayWidth,maxOverlayHeight,ratio,false);								
 	 			break;
 			case Ti.UI.UPSIDE_PORTRAIT:
-				Ti.API.info("Upside Portrait");
+				Ti.API.info("Upside Portrait");			
 				doRotate=true;
 				degreesToRotate = 180;	
-				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);										
+				dimObj=getDimensionPortrait(isImagePortrait,true,degreesToRotate,maxOverlayWidth,maxOverlayHeight,ratio,false);													
 				break;				
 			case Ti.UI.LANDSCAPE_LEFT:
 				Ti.API.info("Landscape left");
 				degreesToRotate = -90;
 				doRotate=true;
-				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);
+				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxOverlayWidth,maxOverlayHeight,ratio,false);
 				break;
 			case Ti.UI.LANDSCAPE_RIGHT: //landsca[e]							
 				Ti.API.info("Landscape right");
 				degreesToRotate = 90;
 				doRotate=true;
-				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxWidth,maxHeight,ratio);			
+				dimObj=getDimensionLandscape(isImagePortrait,true,degreesToRotate,maxOverlayWidth,maxOverlayHeight,ratio,false);			
 				break;   			
 			case Ti.UI.FACE_UP:
 				Ti.API.info("Face up");
@@ -432,17 +449,23 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 		}
 		
 		if (dimObj && dimObj.doRotate){
+			
 			Ti.API.info("doRotate:"+dimObj.doRotate);
 			Ti.API.info("degreesToRotate:"+dimObj.degresToRotate);
+			
+			if (isImagePortrait){				
+				if (newOrientation==Ti.UI.LANDSCAPE_LEFT || newOrientation==Ti.UI.LANDSCAPE_LEFT){
+					imageViewOverlay.top='50%';	
+				} else{
+					imageViewOverlay.top=0;
+				} 
+			}
 			
 			imageViewOverlay.height=dimObj.height;
 			imageViewOverlay.width=dimObj.width;
 			imageViewOverlay.image=thenImage;
-		
-			
-			Ti.API.debug('ImageViewOverlayWidth:'+imageViewOverlay.width+" , ImageViewOverlayHeight:" +imageViewOverlay.height);			
+
 			matrix2d = matrix2d.rotate(degreesToRotate);
-			// in degrees
 			matrix2dImage = matrix2dImage.rotate(degreesToRotate);
 			// in degrees
 	
@@ -458,8 +481,7 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 			
 			imageViewOverlay.animate(rotateFastImage);		
 			cameraHideButon.animate(rotateFast);		
-		}
-				
+		}			
 	}
 });
 

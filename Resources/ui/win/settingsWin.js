@@ -1,8 +1,8 @@
 var settingsWindow = Titanium.UI.createWindow({
-		title : 'Settings',
-		backgroundImage : 'images/bg/settings_background.png',
-		modal : true,
-		navBarHidden:true		
+	title : 'Settings',
+	backgroundImage : 'images/bg/settings_background.png',
+	modal : true,
+	navBarHidden:true		
 });
 	
 //Settings close button
@@ -13,12 +13,12 @@ var settingsCloseButton = Titanium.UI.createButton({
 		height: 88,
 		right : 0,
 		bottom : 0
-	});
+});
 	
 //Settings close button event listener
 settingsCloseButton.addEventListener('click', function() {
-		settingsWindow.close();
-	});
+	settingsWindow.close();
+});
 	
 settingsWindow.add(settingsCloseButton);
 		
@@ -32,7 +32,6 @@ if (Titanium.App.Properties.getString('opacity')!=null){
 	Ti.API.info('Start-Opacity:'+opacity+",OpacityIndex:"+opacityIndex);	
 }
 
-		
 var opacityImages =["opacity_button_0.png","opacity_button_25.png","opacity_button_50.png","opacity_button_100.png"];
 	
 var opacityButton = Titanium.UI.createButton({
@@ -72,7 +71,7 @@ slideShowButton.addEventListener('click',function() {
 		slideshowIndex=0;
 		slideshow=true;
 	} else {
-		slideshowIndex=0;
+		slideshowIndex=1;
 		slideshow=false;
 	}
 	slideShowButton.setBackgroundImage("images/settings/"+slideshowImages[slideshowIndex]);
