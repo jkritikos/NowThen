@@ -90,12 +90,12 @@ var anim_out = Titanium.UI.createAnimation({
 
 var fadeOutAnim = Ti.UI.createAnimation({
 	opacity:0,
-	duration: 1500
+	duration: 1900
 });
 						
 var fadeInAnim = Ti.UI.createAnimation({
 	opacity:1,
-	duration: 1500
+	duration: 1900
 });
 
 var fadeOutListener=function() {	
@@ -452,22 +452,23 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 			
 			Ti.API.info("doRotate:"+dimObj.doRotate);
 			Ti.API.info("degreesToRotate:"+dimObj.degresToRotate);
-			
-			if (isImagePortrait){				
-				if (newOrientation==Ti.UI.LANDSCAPE_LEFT || newOrientation==Ti.UI.LANDSCAPE_LEFT){
-					imageViewOverlay.top='50%';	
-				} else{
-					imageViewOverlay.top=0;
-				} 
-			}
-			
-			imageViewOverlay.height=dimObj.height;
-			imageViewOverlay.width=dimObj.width;
-			imageViewOverlay.image=thenImage;
+		
+		
 
 			matrix2d = matrix2d.rotate(degreesToRotate);
 			matrix2dImage = matrix2dImage.rotate(degreesToRotate);
 			// in degrees
+			
+			
+			if (isImagePortrait){			
+				if (newOrientation==Ti.UI.LANDSCAPE_LEFT || newOrientation==Ti.UI.LANDSCAPE_RIGHT){
+					imageViewOverlay.top='25%';	
+					Ti.API.info("Debug2");
+				} else{
+					Ti.API.info("Debug3");
+					imageViewOverlay.top=0;
+				} 
+			}
 	
 			var rotateFast = Ti.UI.createAnimation({
 				transform : matrix2d,
@@ -476,11 +477,18 @@ Ti.Gesture.addEventListener('orientationchange', function(e) {
 	
 			var rotateFastImage = Ti.UI.createAnimation({
 				transform : matrix2dImage,
+				anchorPoint : {x : 0.5, y : 0.5},
 				duration : 400
 			});
 			
 			imageViewOverlay.animate(rotateFastImage);		
 			cameraHideButon.animate(rotateFast);		
+			
+			
+			imageViewOverlay.height=dimObj.height;
+			imageViewOverlay.width=dimObj.width;
+			imageViewOverlay.image=thenImage;
+		
 		}			
 	}
 });
