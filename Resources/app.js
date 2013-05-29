@@ -8,7 +8,7 @@ var maxWidth=Ti.Platform.displayCaps.platformWidth;
 var maxHeight=Ti.Platform.displayCaps.platformHeight;
 
 var maxOverlayWidth=maxWidth;
-var maxOverlayHeight=maxHeight -  (IPHONE5?96:48);
+var maxOverlayHeight=maxHeight -  (IPHONE5?96:54);
 
 var sWidth=200;
 var sHeight=150;
@@ -39,9 +39,7 @@ var imageView = Titanium.UI.createImageView({
 	image : "images/main/square_graphic_old_image.png",
 	borderColor:'#000000',
     borderWidth: 5,
-    borderRadius: 15,
-	//canScale : true,
-	//hires : true
+    borderRadius: 15
 });
 
 win1.add(imageView);
@@ -127,6 +125,8 @@ buttonStopSlideshow.addEventListener('click', function() {
 	Ti.API.debug('Removing listeners');
 	fadeOutAnim.removeEventListener('complete',fadeOutListener);
 	fadeInAnim.removeEventListener('complete',fadeInListener);
+	nowImageView.opacity=0;
+	thenImageView.opacity=0;
 });
 
 slideshowViewContainer.add(slideshowView);
@@ -255,7 +255,7 @@ cameraBtn.addEventListener('click', function() {
 			thenImageView.height=thenD.height;
 			thenImageView.image=thenImage;
 			
-			nowImageView.animate(fadeOutAnim);			
+			nowImageView.animate(fadeInAnim);			
 			
 			fadeOutAnim.addEventListener('complete',fadeOutListener);			
 			fadeInAnim.addEventListener('complete',fadeInListener)

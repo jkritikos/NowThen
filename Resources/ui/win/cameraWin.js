@@ -38,7 +38,7 @@ var shutterButton = Ti.UI.createButton({
 	width : 93,
 	height: 62,
 	left : 116,
-	bottom:16
+	bottom: (IPHONE5?16:0)
 });
 
 //Shutter button event listener
@@ -116,8 +116,8 @@ cameraFlashButon.addEventListener('click', function() {
 var cameraOverlayBottomToolbarView = Ti.UI.createView({
 	bottom : 0,
 	width : 320,
-	height : 108,
-	zIndex : 100,
+	height : 54,
+	zIndex : 100
 	//backgroundImage: "images/camera/vertical/bottom_menu.png"
 });
 
