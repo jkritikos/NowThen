@@ -43,8 +43,7 @@ var shutterButton = Ti.UI.createButton({
 
 //Shutter button event listener
 shutterButton.addEventListener('click', function() {
-	Ti.API.debug('Animating slideshowViewContainer');	
-	slideshowViewContainer.animate(anim_in);			
+	slideshowViewContainer.animate(anim_in);				
 	Ti.Media.takePicture();		
 });
 
@@ -54,8 +53,8 @@ var cameraHideButon = Ti.UI.createButton({
 	backgroundFocusedImage:"images/camera/vertical/back_button_pressed.png",
 	backgroundSelectedImage:"images/camera/vertical/back_button_pressed.png",
 	focusable:true,
-	width: 102,
-	height: 88,
+	width: 89,
+	height: 86,
 	right : 0,
 	bottom: 0
 });
@@ -63,8 +62,7 @@ var cameraHideButon = Ti.UI.createButton({
 //Camera hide button event listener
 cameraHideButon.addEventListener('click', function() {
 	cameraViewDisplayed=false;
-	Ti.Media.hideCamera();
-	
+	Ti.Media.hideCamera();	
 });
 
 //Camera switch button
@@ -82,8 +80,7 @@ var cameraSwitchButon = Ti.UI.createButton({
 //Camera switch button event listener
 cameraSwitchButon.addEventListener('click', function() {
 	if (Ti.Media.camera == Ti.Media.CAMERA_FRONT) Ti.Media.switchCamera(Ti.Media.CAMERA_REAR);
-	else  Ti.Media.switchCamera(Ti.Media.CAMERA_FRONT);
-	
+	else  Ti.Media.switchCamera(Ti.Media.CAMERA_FRONT);	
 });
 
 //Camera flash button
