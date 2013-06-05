@@ -7,6 +7,9 @@ var cameraViewDisplayed=false;
 var maxWidth=Ti.Platform.displayCaps.platformWidth;
 var maxHeight=Ti.Platform.displayCaps.platformHeight;
 
+Ti.API.info("Max width:"+maxWidth);
+Ti.API.info("Max height:"+maxHeight);
+
 var maxOverlayWidth=maxWidth;
 var maxOverlayHeight=maxHeight -  (IPHONE5?96:54);
 
@@ -68,27 +71,27 @@ var nowImageView,thenImageView;
 //Animations
 var anim_in = Titanium.UI.createAnimation({
 	opacity : 1,
-	duration: 1000	
+	duration: 1800	
 });
 
 var anim_out = Titanium.UI.createAnimation({
 	opacity:0,
-	duration: 1000
+	duration: 1800
 });
 
 var fadeOutAnim = Ti.UI.createAnimation({
 	opacity:0,
-	duration: 1500
+	duration: 2200
 });
 						
 var fadeInAnim = Ti.UI.createAnimation({
 	opacity:1,
-	duration: 1500
+	duration: 2200
 });
 
 var fadeOutListener=function() {	
 	Ti.API.info('Complete fade out listener');
-	thenImageView.animate(anim_out);
+	thenImageView.animate(anim_out );
 	nowImageView.animate(fadeInAnim);						
 }		
 
@@ -186,7 +189,7 @@ galleryBtn.addEventListener('click', function() {
 				if (!isImagePortrait){
 					imageViewOverlay.width=maxOverlayWidth;
 					imageViewOverlay.height=(maxOverlayHeight*ratio).toFixed(2);
-					dimObj=getDimensionPortrait(isImagePortrait,true,0,maxOverlayWidth,maxOverlayHeight,ratio,false);
+					dimObj=getDimensionPortrait(isImagePortrait,true,0,maxOverlayWidth,maxOverlayHeight,ratio,true);
 					imageViewOverlay.width=dimObj.width;
 					imageViewOverlay.height=dimObj.height;
 					imageViewOverlay.top='25%'- (IPHONE5?96:54);	
@@ -243,7 +246,7 @@ cameraBtn.addEventListener('click', function() {
 			var nowD=getDimensionPortrait(isNowImagePortrait,false,0,maxWidth,maxHeight,nowRatio,true);		
 			
 			nowImageView = Ti.UI.createImageView({
-				opacity:1,
+				opacity:0,
 				borderWidth:3,
 				borderColor:'#777',
 				width:nowD.width,
